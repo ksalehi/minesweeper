@@ -3,43 +3,61 @@ require_relative "grid"
 class Minesweeper
     def initialize
         @grid = Grid.new()
+        @game_over = false
     end
 
-    def reveal_tile
+    def run
+        until @grid.won? || @grid.lost?
+            @grid.render
+            coords = get_move
+            reveal(coords)
+        end
+
+        if @grid.won?
+            puts "Congratulations, you win!"
+        elsif @grid.lost?
+            puts "Game over :("
+            @grid.reveal_all
+        end
     end
 
-    def start
-        @grid.render()
-        puts "enter the coordinates of the tile you want to reveal (eg, '2, 1'):"
-        input = gets.chomp
+    def get_move
+        coords = nil
 
-        print input && is_valid?(input)
-        #     puts "please enter a valid input (eg, '2, 1'):"
-        # end
+        until coords && is_valid?(coords)
+            puts "Please enter the coordinates of the tile you want to reveal (eg, 'C1'):"
+            print "> "
+
+            begin
+                coords = parse_input(gets.chomp)
+            rescue
+                puts "Invalid input format"
+                coords = nil
+            end
+        end
+
+        coords
     end
 
-    def is_valid?(input)
-        debugger 
-        # puts type(input)
-        puts x
-        puts y
+    def parse_input(input)
+        x, y = input.split('')
+        [x.ord - 65, Integer(y)]
+    end
 
-        input.length == 2 &&
-        type(x) == Integer &&
-        type(y) == Integer &&
-        (x.is_between(0, 8)) &&
-        (y.is_between(0, 8))
+    def reveal(coords)
+        @grid.reveal_tile(coords)
+    end
+
+    def is_valid?(coords)
+        if coords.is_a?(Array) &&
+            coords.length == 2 &&
+            coords.all? { |x| x.is_a?(Integer) && x.between?(0, 8) }
+            return true
+        else
+            puts "\nInvalid input format"
+        end
     end
 end
 
-# puts "welcome to minesweeper. would you like to play (y/n)"
-# input = gets.chomp
-# if input == "y"
-#     puts "okay, let's get started..."
-#     grid_size_x = 10
-#     grid_size_y = 10
 minesweeper = Minesweeper.new()
-minesweeper.start()
-# else
-#     puts "okay, see you next time!"
-# end
+minesweeper.run()
